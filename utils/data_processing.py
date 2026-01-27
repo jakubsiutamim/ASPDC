@@ -13,6 +13,7 @@ import cv2
 import torch.nn.functional as F
 import albumentations as albu
 
+from pathlib import Path
 
 class TrainSetLoader(Dataset):
     def __init__(self, dataset_dir, cfg):
@@ -60,22 +61,26 @@ class TestSetLoader(Dataset):
         for folder in folder_path:
 
             if "GOPR" in folder:
-                HR_path = os.path.join(dataset_dir, folder, "sharp")
+                HR_path = os.path.join(dataset_dir, folder, 'test', "sharp")
 
-                HR_im = os.listdir(HR_path)
-
-                for im in HR_im:
-
-                    if "png" in im:
-                        image_path = os.path.join(dataset_dir, folder, "sharp", im)
-                        self.file_list.append(image_path)
+                data_sets = os.listdir(HR_path)
+                
+                for dset in data_sets:
+                    if not 'GOPR' in dset:
+                        continue
+                    for im in os.listdir(Path(HR_path) / dset):
+                        if "png" in im:
+                            image_path = Path(HR_path) / dset / im
+                            self.file_list.append(image_path)
+                            if(len(self.file_list) == 100):
+                                return
 
         print(len(self.file_list))
 
     def __getitem__(self, index):
-
+    
         img_hr = cv2.imread(self.file_list[index])
-        img_blur = cv2.imread(self.file_list[index].replace("sharp", "blur"))
+        img_blur = cv2.imread(Path(str(self.file_list[index]).replace("sharp", "blur")))
 
         img_hr = cv2.cvtColor(img_hr, cv2.COLOR_BGR2RGB)
         img_blur = cv2.cvtColor(img_blur, cv2.COLOR_BGR2RGB)
