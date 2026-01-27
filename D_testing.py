@@ -18,7 +18,7 @@ from skimage.metrics import structural_similarity, peak_signal_noise_ratio
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--device', type=str, default='cuda')
-    parser.add_argument('--testset_dir', type=str, default='/home/dong/exp_data/GOPRO_Large/test/')
+    parser.add_argument('--testset_dir', type=str, default='/app/repo/GOPRO')
 
     return parser.parse_args()
 
@@ -30,7 +30,8 @@ def inference(test_loader, cfg):
 
     pretrained_dict = torch.load('final_model/DeblurringNet_FT.pth')
     net.load_state_dict(pretrained_dict['deblurring_state_dict'])
-
+    
+    print(f'test_loader: {list(test_loader)}')
     psnr_list = []
     ssim_list = []
     # torch.cuda.empty_cache()
@@ -55,18 +56,18 @@ def inference(test_loader, cfg):
             psnr_list.append(psnr)
             print(psnr)
 
-            ssim = structural_similarity(deblurring_output, hr_numpy, multichannel=True)
-            ssim_list.append(ssim)
-            print(ssim)
+            # ssim = structural_similarity(deblurring_output, hr_numpy, multichannel=True)
+            # ssim_list.append(ssim)
+            # print(ssim)
             torch.cuda.empty_cache()
     print()
     print(np.mean(np.array(psnr_list)))
-    print(np.mean(np.array(ssim_list)))
+    # print(np.mean(np.array(ssim_list)))
 
 
 def main(cfg):
     test_set = TestSetLoader(dataset_dir=cfg.testset_dir)
-    test_loader = DataLoader(dataset=test_set, num_workers=0, batch_size=1, shuffle=False)
+    test_loader = DataLoader(dataset=test_set, num_workers=1, batch_size=1, shuffle=False)
     inference(test_loader, cfg)
 
 
