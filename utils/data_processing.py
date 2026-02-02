@@ -4,6 +4,7 @@ from PIL import Image
 import os
 from torch.utils.data.dataset import Dataset
 from torchvision.transforms import ToTensor
+from torchvision.transforms import ToPILImage
 import random
 import torch
 import numpy as np
@@ -72,7 +73,7 @@ class TestSetLoader(Dataset):
                         if "png" in im:
                             image_path = Path(HR_path) / dset / im
                             self.file_list.append(image_path)
-                            if(len(self.file_list) == 100):
+                            if(len(self.file_list) == 1):
                                 return
 
         print(len(self.file_list))
@@ -82,11 +83,11 @@ class TestSetLoader(Dataset):
         img_hr = cv2.imread(self.file_list[index])
         img_blur = cv2.imread(Path(str(self.file_list[index]).replace("sharp", "blur")))
 
+
         img_hr = cv2.cvtColor(img_hr, cv2.COLOR_BGR2RGB)
         img_blur = cv2.cvtColor(img_blur, cv2.COLOR_BGR2RGB)
-
+        
         img_hr, img_blur = self.normalize(img_hr, img_blur)
-
         return toTensor(img_hr), toTensor(img_blur)
 
     def __len__(self):
