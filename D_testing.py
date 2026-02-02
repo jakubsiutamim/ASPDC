@@ -16,13 +16,13 @@ import torch.nn as nn
 from skimage.metrics import structural_similarity, peak_signal_noise_ratio
 from torchvision.transforms import ToPILImage
 from utils.data_processing import get_normalize, toTensor
+from tqdm import tqdm
 
 
 def process_video_frames(video_path):
     cap = cv2.VideoCapture(video_path)
 
     frames_num = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    print(frames_num)
     try:
         while True:
             ret, frame = cap.read()
@@ -57,7 +57,6 @@ def numpy_to_cv2(filepath, img):
     if len(img.shape) == 3 and img.shape[2] == 3:
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
-    print(filepath) 
     cv2.imwrite(filepath, img)
 
 def video_inference(cfg):
@@ -67,9 +66,8 @@ def video_inference(cfg):
     pretrained_dict = torch.load('final_model/DeblurringNet_FT.pth')
     net.load_state_dict(pretrained_dict['deblurring_state_dict'])
     
-    print('co')
     with torch.no_grad():
-        for idx, frame in enumerate(process_video_frames(cfg.src)):
+        for idx, frame in tqdm(enumerate(process_video_frames(cfg.src))):
             img_tensor = preprocess_to_tensor(np.copy(frame))
             img_tensor = img_tensor.to(cfg.device)
 
@@ -84,8 +82,6 @@ def video_inference(cfg):
             #numpy_to_cv2(f'frame_deblurred_{idx}.jpg', result)
             cv2.imwrite(f'{cfg.dst}frame_original{idx}.jpg', frame)
             numpy_to_cv2(f'{cfg.dst}frame_deblurred_{idx}.jpg', result)
-            if idx > 1:
-                return
 
 def inference(test_loader, cfg):
     net = DeblurringNet(norm_layer=functools.partial(nn.InstanceNorm2d, affine=False, track_running_stats=True)).to(
